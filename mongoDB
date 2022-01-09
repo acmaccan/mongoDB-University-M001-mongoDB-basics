@@ -1,0 +1,279 @@
+╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                          mongoDB                                             ║  
+╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+
+    The MongoDB Database
+    ════════════════════
+    - Database is a structured way to store and access data.
+    - NoSQL is a way to organized data store that doesn t use legacy approach of related 
+    tables of data, does not have rows and columns.
+    - MongoDB is a NoSQL document database. Is stored as documents.
+    - These documents are in turn stored in what we call collections of documents.
+    - That s why MongoDB is categorized as a NoSQL document database.
+
+    Documents
+    ═════════
+    - Way to organize and store data as a set of field-value pairs
+    - The field is a unique identifier for some data point
+    - The value is data related to a given identifier
+    - A collection would contain many documents
+    - A database would contain multiple collections
+
+    MongoDB Atlas
+    ═════════════
+    - Database in the cloud
+    - MongoDB is used at the core of Atlas for data storage and retrieval
+    - Database as a service
+    - Clusters: group of servers that stores your data
+    - Replica set: a few connected MongoDB instances that store the same data
+    - Instance: a single machine locally or in the cloud, running a certain software. 
+    Si hubiera un error en alguno de los miembros del replica set, la data se mantendría 
+    intacta y disponible para la aplicación gracias a los miembros aún activos del réplica.
+
+    Documents
+    ═════════
+    - Stored BSON and Viewed JSON
+    - Valid JSON format
+    - Is friendly, readable, familiar
+    - Text-based (slow), space-consuming, limited of basic datatypes
+    - Es por eso que la forma en que la data se guarda en memoria es en BSON, binary JSON
+    - BSON: optimized for speed, space and flex. High performance and General-purpose focus
+
+    JSON:
+    - Encoding: UTF-8 String
+    - Data Support: String, Boolean, Number, Array
+    - Readability: Human and Machine
+
+    BSON:
+    - Encoding: Binary
+    - Data Support: String, Boolean, Number (Integer, Long, Float, ...), Array, Date, Raw Binary
+    - Readability: Machine only
+
+    Data Explorer / Accesing data
+    ═════════════════════════════
+    There is multiple ways to explore data.
+    - Atlas - online GUI
+    - Compass - local GUI
+    - mongo shell - local CLI with MQL
+
+    Structure:
+    ----------
+    cluster
+    ┕ databases
+      ┕ collections
+          ┕ documents
+              ┕ subdocuments
+              ┕ arrays
+
+    Atlas
+    -----
+    browse collections
+    select database / collection
+    filter: {"state":"NY","city":"ALBANY"}
+
+    mongosh
+    -------
+    - show db: show list of databases in the cluster
+    - use <db-name>: choose database we are going to use
+    - show collections: show list of collections in the db
+    - db.<collection-name>.find(<query>): return all results that match with our query
+    This query has a show limit of 20 documents. To see next ones type it (iterate)
+    - db.<collection-name>.find(<query>).count(): return the number of documents that match
+    - db.<collection-name>.findOne(<query>): check if one document exist
+
+    it: iterates through a cursor
+    cursor: pointer to a result set of a query
+    pointer: a direct address of the memory location
+
+    Example:
+    use sample_training                                      // Point to db we are going to use
+    show collections                                         // List collections
+    db.zips.find({"state":"NY"})                             // Return matching documents
+    db.zips.find({"state":"NY","city":"ALBANY"}).count()     // Return number of matching documents
+    db.zips.find({"state":"NY","city":"ALBANY"}).pretty()    // Easy to read
+    db.zips.find({})                                         // Any 20 documents without particular order
+
+    Insert new documents
+    ════════════════════
+    Atlas
+    -----
+    browse collections
+    insert document
+
+    mongosh
+    -------
+    - use <db-name>: choose database we are going to use
+    - db.<collection-name>.findOne(<query>): check if document exist
+    - db.<collection-name>.insert({document}): if we copy an existing doc return duplicate key error
+    - If we erase the _id field from the doc to insert, it is gonna be created with a new _id value
+
+    Example:
+    db.inspections.insert([{ "test": 1 }, { "test": 2 }, { "test": 3 }])   // Bulk result - 3 docs added
+    
+    db.inspections.insert([{ "test": 1 }, { "test": 2 }, { "test": 3 }])   // Bulk result - 3 docs added
+    - If we repeat the operation, 3 new docs will be added to the collection with the same data, but
+    differents _id
+
+    db.inspections.insert([{ "_id": 1, "test": 1 }, 
+                           { "_id": 1, "test": 2 }, 
+                           { "_id": 3, "test": 3 }])   // One document was inserted
+    - The documents will be inserted in the order they are listed. With order (default unespecified), 
+    if it fails, it stops.
+
+    db.inspections.insert([{ "_id": 1, "test": 1 }, 
+                           { "_id": 1, "test": 2 }, 
+                           { "_id": 3, "test": 3 }],
+                           { "ordered": false })   // Two documents were inserted
+    - With ordered false, it will insert all documents that have not duplicate _id.
+
+    db.inspection.insert([{ "_id": 1, "test": 1 }, 
+                          { "_id": 1, "test": 2 }, 
+                          { "_id": 3, "test": 3 }]) // Again three documents were inserted
+
+    - If we misspelled a collection - inspections no inspection - the collection will be created 
+    with the three documents and no errors will show
+    
+    Update documents
+    ════════════════
+    Atlas
+    -----
+    browse collections
+    edit fields and type fields
+
+    mongosh
+    -------
+    updateOne() - findOne()
+    updateMany() - find()
+
+    Example:
+    use sample_training
+    show collections
+    db.zips.find({"city":"HUDSON"}).count() // 16
+    db.zips.find({"city":"HUDSON"},{"$inc": {"pop": 10}}) 
+    // {"acknowledged": true, "matchedCount": 16, "modifiedCount": 16}
+
+    Example:
+    use sample_training
+    show collections
+    db.zips.find({"zip":"12534"}) // "pop": 21215
+    db.zips.updateOne({"zip":"12534"},{"$set": {"pop": 17630}}) 
+
+    // {"acknowledged": true, "matchedCount": 1, "modifiedCount": 1}
+    Remember that typos will insert new key/values with no errors.
+
+    Example:
+    db.grades.find({"student_id": 250, "class_id": 339}) 
+    // Object with array of scores, with type and score fields
+
+    db.grades.updateOne({"student_id": 250, "class_id": 339}, 
+    {"$push": {"scores": {"type": "extra credit", "score": 100}}})
+
+    // {"acknowledged": true, "matchedCount": 1, "modifiedCount": 1}
+
+    MQL Update operators
+    --------------------
+    $inc: increment the specify field by the indicated amount
+    {"$inc": {"<field 1>": <increment value 1>, "<field 2>": <increment value 2>, ...}}
+
+    $set: set a key/value. If does not exist create one, and if already exist will update it.
+    {"$set": {"<field 1>": <value 1>, "<field 2>": <value 2>, ...}}
+
+    $unset
+
+    $push: to add an element to an array field. If doesn not exist, it will create it
+    {"$push": {"<field 1>": <value 1>, "<field 2>": <value 2>, ...}}
+
+    Delete collections
+    ══════════════════
+    
+    Atlas
+    -----
+    Through garbage sign we can delete databases, collections and documents
+
+    mongosh
+    -------
+    Delete documents:
+    deleteOne({"<field to match>": "<value to match>"})
+    deleteMany({"<field to match>": "<value to match>"})
+
+    Delete collections:
+    db.<collection>.drop()
+
+    Example:
+    db.inspections.find({"test": 3}).count() // 3
+    db.inspections.deleteMany({"test": 3}) // {"acknowledged": true, "deletedCount": 3}
+    db.inspection.drop() // true
+
+    Query operators
+    ═══════════════
+    There is another MQL operators beside the update operators, query operators. Provide
+    additional ways to locate data within the database.
+
+    $
+    - Precedes MQL operators
+    - Precedes aggregation pipeline stages
+    - Allow access to field values
+
+    Comparison operators
+    --------------------
+    $eq = equal to
+    $ne = not equal to
+    $gt > greater than
+    $lt < less than
+    $gte >= greater than or equal to
+    $lte <= less than or equal to
+
+    Syntax: { <field>: { <operator>: <value> } }
+
+    Example:
+
+    Atlas
+    -----
+    filter: {"tripduration": {"$lte": 70}, "usertype": {"$ne": "Suscriber"}} 
+
+    mongosh
+    -------
+    db.trips.find({"tripduration": {"$lte": 70}, "usertype": {"$ne": "Customer"}})
+
+    Logic operators
+    ---------------
+    $and: match all of the specified query clauses - This and this - all true
+    $or: at least one of the query clauses is matched - This or this - one true
+    $nor: fail to match both given clauses, exclude all clauses - Not this and not this - all false
+    $not: negates the query requirements - Not this - one false
+
+    $and, $or, $nor syntax:
+    { <operator>: [{<statement 1>}, {<statement 2>}, ... ]} // array syntax neccesary
+
+    $not syntax:
+    { $not : {<statement 1>} } // array syntax not neccesary
+
+    $nor example:
+    { $nor: [{result: "No Violation Issued"}, {result: "Violation Issued"}] }
+    // Every results except these ones
+
+    Implicit $and:
+    Is implicit by default in all queries (the commas)
+
+    { sector: "Mobile Food Vendor - 881", result: "Warning" }
+    { $and: [{ sector: "Mobile Food Vendor - 881" }, { result: "Warning" }] }
+
+    { "$and": [{"student_id": {"$gt": 25}}, {"student_id": {"$lt": 100}}] }
+    { "student_id": {"$gt": 25, "$lt": 100} }
+
+    Explicit $and:
+    Used when need to include the same operator more than once in a query
+
+    db.routes.find({ "$and": 
+                            [
+                                {"$or": [{"dst_airport": "KZN"}, {"src_airport": "KZN"}] },
+                                {"$or": [{"airplane": "CR2"}, {"airplane": "A81"}] }
+                            ] 
+                    }).count() // 18
+
+    Expressive query operator
+    ═════════════════════════
+    $expr can do more than a unique operation. Allows the use of aggregation expressions
+    within the query language.
+
+    
