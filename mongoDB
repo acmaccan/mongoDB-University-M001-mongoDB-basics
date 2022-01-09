@@ -1,5 +1,5 @@
 ╔══════════════════════════════════════════════════════════════════════════════════════════════╗
-║                                          mongoDB                                             ║  
+║                                  M001: mongoDB basics                                        ║  
 ╚══════════════════════════════════════════════════════════════════════════════════════════════╝
 
     The MongoDB Database
@@ -59,11 +59,11 @@
     Structure:
     ----------
     cluster
-    ┕ databases
-      ┕ collections
-          ┕ documents
-              ┕ subdocuments
-              ┕ arrays
+        ┕ databases
+            ┕ collections
+                ┕ documents
+                    ┕ subdocuments
+                    ┕ arrays
 
     Atlas
     -----
