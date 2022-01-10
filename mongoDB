@@ -1,6 +1,6 @@
-╔══════════════════════════════════════════════════════════════════════════════════════════════╗
-║                                  M001: mongoDB basics                                        ║  
-╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+    ╔══════════════════════════════════════════════════════════════════════════════════════════╗
+    ║                                M001: mongoDB basics                                      ║  
+    ╚══════════════════════════════════════════════════════════════════════════════════════════╝
 
     The MongoDB Database
     ════════════════════
@@ -46,7 +46,7 @@
 
     BSON:
     - Encoding: Binary
-    - Data Support: String, Boolean, Number (Integer, Long, Float, ...), Array, Date, Raw Binary
+    - Data Support: String, Boolean, Number (Int, Long, Float, ...), Array, Date, Raw Binary
     - Readability: Machine only
 
     Data Explorer / Accesing data
@@ -273,7 +273,275 @@
 
     Expressive query operator
     ═════════════════════════
-    $expr can do more than a unique operation. Allows the use of aggregation expressions
-    within the query language.
+    $expr can do more than a simple operation. 
+    Allows the use of aggregation expressions within the query language.
+    Allow us to use variables and conditional statements.
+    Compare fields within the same document to each other.
 
+    Syntax:
+    { $expr: { <expression> } }
+
+    Example:
+    filter: { "$expr": { "$eq": ["$start station id", "$end station id"] } }
+    db.trips.find("$expr": { "$eq": ["$start station id", "$end station id"]).count() // 316
+
+    $
+    - Denote the use of an operator
+    - Addresses the field value (not a key / field name itself)
+
+    Example:
+    { "$expr": {
+            "$and": [
+                { "$gt": ["$tripduration", 1200] },
+                { "$eq": ["$end station id", "$start station id"] }
+            ]
+        }
+    }
+
+    MQL Syntax: { <field>: { <operator>: <value> }}
+    Aggregation Syntax: { <operator>: { <field>, <value> }}
+
+    Array operators
+    ═══════════════
+    $push
+    - to add an element to an array.
+    - turns a field into an array field if it was previously a different type.
+
+    $all
+    - to return all matches with a single element from an array. Returns a cursor
+    with all documents in which the specified array field contains all the given
+    elements regardless of their order in the array.
+    { <array field> : { "$all": [<item 1>, <item 2>, ...] } }
+
+    $size
+    - to limit the search by the array length. Returns a cursor with all documents 
+    where the specified array is exactly the given length.
+    { <array field> : { "$size": <number> } }
+
+    Accessing data in arrays
+    ════════════════════════
+
+    Example
+    Into sample_airbnb filter: { "amenities": "Shampoo" } 
+    // All matchs. There is no distinction that amenities is an array
+
+    How can we indicate that amenities is an array?
+    Into sample_airbnb filter: { "amenities": ["Shampoo"] } 
+    // Returns just amenities array, but with only one element "Shampoo". Looks for an exact match
+
+    Does the order matters?
+    Into sample_airbnb filter: { "amenities": ["Wifi", "Internet", "Kitchen", ...] }
+    // Yes. If we turn the order the results will be different
+
+    How do we find all results that match with a single element without worrying about the order?
+    Into sample_airbnb filter: { "amenities": { "$all": ["Shampoo"] } }
+    // It will return all matches with include Shampoo in the amenities array
+
+    If we want to search arrays with less than 20 elements that include Shampoo
+    Into sample_airbnb filter: { "amenities": { "$size": 20 }, { "$all": ["Shampoo"] } }
+
+    Projection
+    ══════════
+    Allow us to choose which document fields will be part of the resulting cursor.
+
+    Example
+    db.listingAndReviews.find(
+        { 
+            "amenities": {   // Search
+                "$size": 20,
+                "$all": [ "Internet", "Wifi", "Kitchen", "Heating", ... ]
+            }
+        },
+        {
+            "price": 1,     // Projection: fields included in the cursor result
+            "address": 1
+        }
+    )
+    .pretty()
+
+    Syntax:
+    1 - include field / 0 - exclude field
+    Projections can not have mixed inclusions or exclusions
+    db.<collection>.find( { <query> }, { <field1>: 1, <field2>: 1 } ) // Inclusion
+    db.<collection>.find( { <query> }, { <field1>: 0, <field2>: 0 } ) // Exclusion
+    db.<collection>.find( { <query> }, { <field1>: 0, "_id": 0 } ) // Exception
+
+    $elemMatch
+    Allow us to access elements in a subdocument of an array field.
+
+    Example:
+    We want to access just scores > score values.
+
+    {
+        "_id": ObjectId("0000000000000000000"),
+        "student_id": 1,
+        "scores": [
+            {
+                "type": "exam",
+                "score": 89
+            },
+            {
+                "type": "homework",
+                "score": 92
+            }
+        ],
+        "class_id": 265
+    }
+
+    We can use $elemMatch for projection:
+    db.grades.find({"class_id": 265}, {"scores": {"$elemMatch": {"score": {"$gt": 85}}}})
+    // We get all results. Only the objects where score greater than 85, will show fully.
+    The others just will get the _id field.
+
+    Or we can use it in the find:
+    db.grades.find({"scores": {"$elemMatch": {"type": "extra credit"}}})
+    // We get all the results where exist at least one element in scores array, 
+    with value "extra credit"
+
+    Querying arrays and subdocuments
+    ════════════════════════════════
+    How to get to the array fields in nested documents? MQL use dot notation, as deep as is needed.
     
+    Example
+    db.trips.findOne({"start station location.type": "Point"})
+                                                    // db level
+    trips {                                         // collection level
+        "_id": ObjectId("000000000000000000"),
+        "tripduration": 280,
+        "start station id": 512,
+        "start station location" {                  // Object that stores a subdocument 
+            "type": "Point",                        // Subdocument level
+            "coordinates": [
+                -73.99,
+                40.75
+            ]
+        }
+    }
+
+    Example
+    All Zuckerbergs
+    db.companies.find({ "relationships.0.person.last_name": "Zuckerberg" }, { "name": 1 })
+                        ↑ find                                                ↑ projection
+
+    All Marks that are CEOs
+    db.companies.find({ "relationships.0.person.first_name": "Mark", "relationships.0.title": {"$regex": "CEO"} }, { "name": 1 })
+                        ↑ find                                                                  ↑ match expression    ↑ projection
+
+    All seniors named Mark who no longer work at their company
+    db.companies.find({ "relationships": {"$elemMatch": {"is_past": true, "person.first_name": "Mark"}} }, { "name": 1 }).count() // 256
+
+    Aggregation Framework
+    ═════════════════════
+    Another way to query data in mongoDB. Everything that is possible to do in MQL also it is
+    possible in the aggregation framework. Allow us to do more complex data pipelines.
+
+    MQL
+    ---
+    Allow us to filter and update data.
+
+    db.listingAndReviews.find(
+        {"amenities": "Wifi"},                  // Search
+        {"price": 1, "address": 1, "_id: 0"}    // Projection
+    )
+
+    Aggregation Framework
+    ---------------------
+    Allow us to compute and reshape data.
+
+    db.listingAndReviews.aggregate([                        // Allow us to do more than one query at once
+        { $match: {"amenities": "Wifi"} },                  // Search
+        { $project: {"price": 1, "address": 1, "_id: 0"} }  // Projection
+    ])                                                      // Like every array, order is important to the pipeline
+
+    listingAndReviews       >       $match       >       $project
+                                    ↑ 1° filter          ↑ 2° filter
+
+    $group
+    Takes the incoming stream of data, and siphons it into multiple distinct reservoirs.
+    Non-filtering stages do not modify the original data. Instead they work with data in the
+    cursor.
+
+    db.listingAndReviews.aggregate([
+        { $project: {"address": 1, "_id: 0"} },
+        { $group: {id_: "$address.country"} } // Group by expression
+    ])
+    // 9 countries
+
+    Sort and limit
+    ══════════════
+    db.zips.find().sort({"pop": 1}).limit(1) // First result from cursor, asc order
+    db.zips.find().sort({"pop": -1}).limit(1) // First result from cursor, desc order
+    db.zips.find().sort({"pop": -1}).limit(10) // First ten results from cursor, desc order
+
+    Cursor methods
+    --------------
+    This not modify the data in the database. Apply to the results set in the cursor.
+    
+    sort() → After the cursor is populated with the filter data from the find command, 
+            then applies the sort method, 1 increasing / -1 decreasing order
+
+    limit() → Apply after the sort
+
+    pretty() → Better reading
+
+    count() → Count resulting documents
+
+    Indexes
+    ═══════
+    Make queries more efficient. In a DB is a special data structure that stores
+    a small portion of the collection s data set in an easy to traverse form.
+    Sorting is high consuming.
+
+    Not use Index
+    -------------
+    - Find all mentions of Toni Morrison
+    - Look through every page in a book
+
+    Using an Index
+    --------------
+    - Find all mentions of Toni Morrison
+    - Go to M in the Index
+    - Locate Morrison
+    - Go to referenced page
+
+    Given 
+    1° Query - db.trips.find({"birth year": 1989})                             // Finds by birth year
+    2° Query - db.trips.find({"start station id": 476}).sort("birth year": 1)  // Sorts by birth year
+
+    For 1° Query - Create Single Index
+    db.trips.createIndex({"birth year": 1}) // This index order by birth year
+    db.trips.find({"birth year": 1989})     // After index is created, now this query goes directly to 1989 docs
+
+    For 2° Query - Create Compound Index
+    db.trips.createIndex({"start station id": 1, "birth year": 1}) // This index first order by start station id, then by birth year
+    db.trips.find({"start station id": 476}).sort("birth year": 1)
+
+    Data Modeling
+    ═════════════
+    Shape and structure for data. A way to organize fields in a document to support your 
+    application performance and querying capabilities.
+
+    Rule: 
+    Data is stored in the way that it is used.
+
+    Main conditerations:
+    - What we will store?
+    - How it will be queried?
+    - Who is using our app?
+
+    Data that is used together should be stored together.
+    Evolving app implies an evolving data model.
+
+    Upsert
+    ══════
+    Everything in MQL that is used to locate a document in a collection can also be
+    used to modify this document.
+
+    db.<collection>.updateOne({<query to locate>}, {<update>})
+
+    Upsert is a hybrid of update and insert, it should only be used when it is needed.
+    Third option. By default is set to false.
+    Is there a match? Then update the matched document.
+    Is not there a match? Then insert a new document.
+    
+    db.<collection>.updateOne({<query>}, {<update>}, {"upsert": true})
