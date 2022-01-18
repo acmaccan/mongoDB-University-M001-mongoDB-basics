@@ -208,15 +208,15 @@
   Atlas:
   Through garbage sign we can delete databases, collections and documents
 
-  mongosh
-  - Delete documents:
+  mongosh:
+  Delete documents:
   ```
   deleteOne({"<field to match>": "<value to match>"})
   deleteMany({"<field to match>": "<value to match>"})
   ```
   <br/>
 
-  - Delete collections:
+  Delete collections:
   ```
   db.<collection>.drop()
   ```
@@ -246,7 +246,7 @@
   - $gte >= greater than or equal to
   - $lte <= less than or equal to
 
-  Syntax: { <field>: { <operator>: <value> } }
+  Syntax: { \<field>: { \<operator>: \<value> } }
 
   Atlas:
   ```
@@ -388,22 +388,37 @@
   <br/>
 
   How can we indicate that amenities is an array?
-  Into sample_airbnb filter: { "amenities": ["Shampoo"] }
+  Into sample_airbnb 
+  ```
+  filter: { "amenities": ["Shampoo"] }
   // Returns just amenities array, but with only one element "Shampoo". Looks for an exact match
+  ```
+  <br/>
 
   Does the order matters?
-  Into sample_airbnb filter: { "amenities": ["Wifi", "Internet", "Kitchen", ...] }
+  Into sample_airbnb 
+  ```
+  filter: { "amenities": ["Wifi", "Internet", "Kitchen", ...] }
   // Yes. If we turn the order the results will be different
+  ```
+  <br/>
 
   How do we find all results that match with a single element without worrying about the order?
-  Into sample_airbnb filter: { "amenities": { "$all": ["Shampoo"] } }
+  Into sample_airbnb
+  ```
+  filter: { "amenities": { "$all": ["Shampoo"] } }
   // It will return all matches with include Shampoo in the amenities array
+  ```
+  <br/>
 
   If we want to search arrays with less than 20 elements that include Shampoo
-  Into sample_airbnb filter: { "amenities": { "$size": 20 }, { "$all": ["Shampoo"] } }
+  Into sample_airbnb 
+  ```
+  filter: { "amenities": { "$size": 20 }, { "$all": ["Shampoo"] } }
+  ```
+  <br/>
 
-  Projection
-  ══════════
+  ## Projection
   Allow us to choose which document fields will be part of the resulting cursor.
 
   Example
