@@ -183,23 +183,23 @@
 
   ### MQL Update operators
   
-  - $inc: increment the specify field by the indicated amount
+  \$inc: increment the specify field by the indicated amount
   ```
-  {"$inc": {"<field 1>": <increment value 1>, "<field 2>": <increment value 2>, ...}}
-  ```
-  <br/>
-
-  - $set: set a key/value. If does not exist create one, and if already exist will update it.
-  ```
-  {"$set": {"<field 1>": <value 1>, "<field 2>": <value 2>, ...}}
+  { "$inc": {"<field 1>": <increment value 1>, "<field 2>": <increment value 2>, ...} }
   ```
   <br/>
 
-  - $unset
-
-  - $push: to add an element to an array field. If doesn not exist, it will create it
+  \$set: set a key/value. If does not exist create one, and if already exist will update it.
   ```
-    {"$push": {"<field 1>": <value 1>, "<field 2>": <value 2>, ...}}
+  { "$set": {"<field 1>": <value 1>, "<field 2>": <value 2>, ...} }
+  ```
+  <br/>
+
+  \$unset
+
+  \$push: to add an element to an array field. If doesn not exist, it will create it
+  ```
+  { "$push": {"<field 1>": <value 1>, "<field 2>": <value 2>, ...} }
   ```
   <br/>
 
@@ -232,10 +232,10 @@
   ## Query operators
   There is another MQL operators beside the update operators, query operators. Provide additional ways to locate data within the database.
 
-  - $
-    - Precedes MQL operators
-    - Precedes aggregation pipeline stages
-    - Allow access to field values
+  \$
+  - Precedes MQL operators
+  - Precedes aggregation pipeline stages
+  - Allow access to field values
 
   ## Comparison operators
 
