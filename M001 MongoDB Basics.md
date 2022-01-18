@@ -444,7 +444,7 @@
   ```
   db.\<collection>.find( { \<query> }, { \<field1>: 1, \<field2>: 1 } ) // Inclusion
   db.\<collection>.find( { \<query> }, { \<field1>: 0, \<field2>: 0 } ) // Exclusion
-  db.\<collection>.find( { \<query> }, { \<field1>: 0, "_id": 0 } ) // Exception
+  db.\<collection>.find( { \<query> }, { \<field1>: 0, "_id": 0 } )     // Exception
   ```
   <br/>
 
@@ -513,20 +513,21 @@
   All Zuckerbergs
   ```
   db.companies.find({ "relationships.0.person.last_name": "Zuckerberg" }, { "name": 1 })
-  ↑ find ↑ projection
+                      ↑ find                                                ↑ projection
   ```
   <br/>
 
   All Marks that are CEOs
   ```
   db.companies.find({ "relationships.0.person.first_name": "Mark", "relationships.0.title": {"$regex": "CEO"} }, { "name": 1 })
-  ↑ find ↑ match expression ↑ projection
+                       ↑ find                                                                 ↑ match expression    ↑ projection
   ```
   <br/>
 
   All seniors named Mark who no longer work at their company
   ```
-  db.companies.find({ "relationships": {"$elemMatch": {"is_past": true, "person.first_name": "Mark"}} }, { "name": 1 }).count() // 256
+  db.companies.find({ "relationships": {"$elemMatch": {"is_past": true, "person.first_name": "Mark"}} }, { "name": 1 }).count()
+  // 256
   ```
   <br/>
 
@@ -573,9 +574,9 @@
 
   ## Sort and limit
   ```
-  db.zips.find().sort({"pop": 1}).limit(1) // First result from cursor, asc order
-  db.zips.find().sort({"pop": -1}).limit(1) // First result from cursor, desc order
-  db.zips.find().sort({"pop": -1}).limit(10) // First ten results from cursor, desc order
+  db.zips.find().sort({"pop": 1}).limit(1)              // First result from cursor, asc order
+  db.zips.find().sort({"pop": -1}).limit(1)             // First result from cursor, desc order
+  db.zips.find().sort({"pop": -1}).limit(10)            // First ten results from cursor, desc order
   ```
   <br/>
 
